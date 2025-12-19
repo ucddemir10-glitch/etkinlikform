@@ -37,7 +37,7 @@ body{
 .tree-form{width:100%;max-width:420px;z-index:2;position:relative;}
 .logo{
   position:absolute;
-  top:-90px;
+  top:-40px;
   left:50%;
   transform:translateX(-50%);
 }
@@ -183,7 +183,6 @@ button:hover{background:#134417;}
   <div class="tree-trunk"></div>
   <div class="tree-roots"></div>
 </div>
-
 <script>
 const MAX_KAYIT = 100;
 const API_URL = "https://script.google.com/macros/s/AKfycbxMno1kXP50Tpbpr-67-eSKMorSG4jRwUlCMrpjysbcnc9rOFBmY-ARFrvwzIgyGNAX-Q/exec";
@@ -195,41 +194,52 @@ const limitMessage = document.getElementById("limitMessage");
 
 function loadCounter(){
   fetch(API_URL)
-    .then(r=>r.json())
-    .then(d=>{
-      const kalan = MAX_KAYIT - d.current;
+    .then(r => {
+      if (!r.ok) throw new Error("API hata");
+      return r.json();
+    })
+    .then(d => {
+      const kalan = MAX_KAYIT - (d.current || 0);
       remaining.textContent = kalan > 0 ? kalan : 0;
-      if(kalan <= 0){
-        form.style.display="none";
-        limitMessage.style.display="block";
+      if (kalan <= 0) {
+        form.style.display = "none";
+        limitMessage.style.display = "block";
       }
+    })
+    .catch(err => {
+      console.error("API HATASI:", err);
+      remaining.textContent = "—";
     });
 }
+
 loadCounter();
 
-form.addEventListener("submit",e=>{
+form.addEventListener("submit", e => {
   e.preventDefault();
 
-  const data = {
-    isim:form.isim.value,
-    numara:form.numara.value,
-    eposta:form.eposta.value,
-    telefon:form.telefon.value
-  };
-
-  fetch(API_URL,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(data)
+  fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      isim: form.isim.value,
+      numara: form.numara.value,
+      eposta: form.eposta.value,
+      telefon: form.telefon.value
+    })
   })
-  .then(r=>r.json())
-  .then(()=>{
-    successMessage.style.display="block";
+  .then(r => r.json())
+  .then(() => {
+    successMessage.style.display = "block";
     form.reset();
     loadCounter();
+  })
+  .catch(err => {
+    alert("Kayıt sırasında hata oluştu");
+    console.error(err);
   });
 });
 </script>
+
 
 </body>
 </html>
